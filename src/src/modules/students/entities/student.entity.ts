@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { ClassEntity } from '../../classes/entities/class.entity';
 
 @Entity('students')
 export class StudentEntity {
@@ -13,4 +14,7 @@ export class StudentEntity {
 
   @Column({ unique: true })
   email: string;
+
+  @ManyToMany(() => ClassEntity, (classEntity) => classEntity.estudiantes)
+  classes: ClassEntity[];
 }

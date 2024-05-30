@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -51,7 +55,7 @@ export class StudentsService {
     });
 
     if (!student)
-      throw new BadRequestException(
+      throw new NotFoundException(
         'El estudiante no se encuentr en la base de datos',
       );
   }

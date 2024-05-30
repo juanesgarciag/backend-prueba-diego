@@ -20,7 +20,9 @@ export class ClassEntity {
   @Column()
   descripcionClase: string;
 
-  @ManyToMany(() => StudentEntity)
+  @ManyToMany(() => StudentEntity, (student) => student.id, {
+    eager: true,
+  })
   @JoinTable()
   estudiantes: StudentEntity[];
 
