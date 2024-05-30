@@ -1,26 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ClassEntity } from './entities/class.entity';
+import { Repository } from 'typeorm';
+import { StudentEntity } from '../students/entities/student.entity';
+import { TeacherEntity } from '../teachers/entities/teacher.entity';
 
 @Injectable()
 export class ClassesService {
-  create(createClassDto: CreateClassDto) {
-    return 'This action adds a new class';
+  constructor(
+    @InjectRepository(ClassEntity)
+    private readonly classRespository: Repository<ClassEntity>,
+    @InjectRepository(StudentEntity)
+    private readonly studentRepository: Repository<StudentEntity>,
+    @InjectRepository(TeacherEntity)
+    private readonly teacherRepository: Repository<TeacherEntity>,
+  ) {}
+
+  async create(createClassDto: CreateClassDto) {
+    const teacher = await this.teacherRepository.findOneBy({
+      email: createClassDto.profesor.email,
+    });
+
+    if (!teacher) {
+      throw new BadRequestException(
+        'El profesor no se encuentra en la base de datos',
+      );
+    } else {
+      createClassDto.profesor = teacher;
+    }
+
+    const students = await Promise.all(
+      createClassDto.estudiantes.map(async (studentId) => {
+        const student = await this.studentRepository.findOneBy({
+          email: studentId.email,
+        });
+        if (!student) {
+          throw new BadRequestException(
+            `El estudiante con email ${studentId.email} no se encuentra en la base de datos`,
+          );
+        }
+        return student;
+      }),
+    );
+
+    if (students.length) {
+      createClassDto.estudiantes = students;
+    }
+
+    return await this.classRespository.save(createClassDto);
   }
 
-  findAll() {
-    return `This action returns all classes`;
+  async findAll() {
+    return await this.classRespository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} class`;
+  async findOne(id: number) {
+    return await this.classRespository.findBy({ id });
   }
 
-  update(id: number, updateClassDto: UpdateClassDto) {
-    return `This action updates a #${id} class`;
+  async update(id: number, updateClassDto: UpdateClassDto) {
+    return await this.classRespository.update({ id }, updateClassDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} class`;
+  async remove(id: number) {
+    return await this.classRespository.delete({ id });
   }
 }

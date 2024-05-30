@@ -1,26 +1,58 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { TeacherEntity } from './entities/teacher.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TeachersService {
-  create(createTeacherDto: CreateTeacherDto) {
-    return 'This action adds a new teacher';
+  constructor(
+    @InjectRepository(TeacherEntity)
+    private readonly teacherRespository: Repository<TeacherEntity>,
+  ) {}
+
+  async create(createTeacherDto: CreateTeacherDto) {
+    const teacher = await this.teacherRespository.findOneBy({
+      email: createTeacherDto.email,
+    });
+    if (teacher) {
+      throw new BadRequestException(
+        'El email ya se encuentra registrado, no se puede crear otro profesor con la misma cuenta de email.',
+      );
+    }
+    return await this.teacherRespository.save(createTeacherDto);
   }
 
-  findAll() {
-    return `This action returns all teachers`;
+  async findAll() {
+    return await this.teacherRespository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} teacher`;
+  async findOne(id: number) {
+    this.validateTeacher(id);
+    return await this.teacherRespository.findBy({ id });
   }
 
-  update(id: number, updateTeacherDto: UpdateTeacherDto) {
-    return `This action updates a #${id} teacher`;
+  async update(id: number, updateTeacherDto: UpdateTeacherDto) {
+    this.validateTeacher(id);
+    return await this.teacherRespository.update({ id }, updateTeacherDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} teacher`;
+  async remove(id: number) {
+    this.validateTeacher(id);
+    return await this.teacherRespository.delete({ id });
+  }
+
+  private async validateTeacher(
+    id: number,
+  ): Promise<BadRequestException | void> {
+    const student = await this.teacherRespository.findOneBy({
+      id,
+    });
+
+    if (!student)
+      throw new BadRequestException(
+        'El profesor no se encuentr en la base de datos',
+      );
   }
 }

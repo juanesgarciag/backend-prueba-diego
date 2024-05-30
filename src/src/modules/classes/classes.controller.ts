@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
@@ -9,6 +17,9 @@ export class ClassesController {
 
   @Post()
   create(@Body() createClassDto: CreateClassDto) {
+    if (!createClassDto.estudiantes) {
+      createClassDto.estudiantes = [];
+    }
     return this.classesService.create(createClassDto);
   }
 
@@ -18,17 +29,17 @@ export class ClassesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.classesService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.classesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateClassDto: UpdateClassDto) {
-    return this.classesService.update(+id, updateClassDto);
+  update(@Param('id') id: number, @Body() updateClassDto: UpdateClassDto) {
+    return this.classesService.update(id, updateClassDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.classesService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.classesService.remove(id);
   }
 }
